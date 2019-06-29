@@ -42,11 +42,13 @@
     function init() {
         loadTodos();
         bindEvents();
-        router('all');      // HERE'S MY TINY ROUTER FUNCTION
+        var router = new Router();
+        router.init('all');          // HERE'S MY TINY CRAPPY ROUTER FUNCTION 
     }
 
-    function router(filterType){
-      window.addEventListener('hashchange', function() {
+    function Router(){
+      this.init = function(init){
+        window.addEventListener('hashchange', function() {
         if (location.hash === '#/all') 
           filter = 'all';
         if (location.hash === '#/active')
@@ -55,9 +57,10 @@
           filter = 'completed';
         render();
       }, false);
-      filter = filterType;                   // Initial filter 
+      filter = init;                   // Initial filter 
       location.hash = '#/'+init;       // Display initial filter type in URL
       render();
+      }
     }
 
     function bindEvents() {
@@ -331,7 +334,7 @@
         }     
     }  
 
-  function displayTodoToScreen(todos) {
+    function displayTodoToScreen(todos) {
         var todosUl = document.querySelector('#todo-list');
         todosUl.innerHTML = "";
         for (var i = 0; i < todos.length; i++) {
