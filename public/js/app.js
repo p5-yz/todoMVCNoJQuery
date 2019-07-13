@@ -1,7 +1,13 @@
-// Updates:
-// Removed Handlebars library and replaced 
-// Removed Router library and replaced
-// Removed native closest() function and replaced
+// UPDATES:
+// Removed JQuery and replaced with native Javascript
+// Changed methods into functions
+// Removed Handlebars todoTemplate and footerTemplate and replaced with buildTodoList() and buildFooter() functions
+// Removed Director's Router constructor function and replaced with my router function
+// Removed DOM element method closest() and replaced with my version of the closest() function
+// Removed Handlebars templates <SCRIPT> tags from index.html
+// Removed Director.js <SCRIPT> tag from index.html
+// Refactored functions for readability.
+// Refactored render() into two separate function calls
 
   'use strict';  
     // GLOBAL VARIABLES.
@@ -40,27 +46,27 @@
     }
     
     function init() {
-        loadTodos();
-        bindEvents();
-        var router = new Router();
-        router.init('all');          // HERE'S MY TINY CRAPPY ROUTER FUNCTION 
+        loadTodos();-
+        bindEvents();         
+        initFilter('all')        
     }
 
-    function Router(){
-      this.init = function(init){
-        window.addEventListener('hashchange', function() {
+    function router(){
+        filter = "";
         if (location.hash === '#/all') 
           filter = 'all';
         if (location.hash === '#/active')
           filter = 'active';
         if (location.hash === '#/completed')
           filter = 'completed';
-        render();
-      }, false);
-      filter = init;                   // Initial filter 
-      location.hash = '#/'+init;       // Display initial filter type in URL
+        if (filter)  
+          render();
+    }
+
+    function initFilter(init){
+      filter = init;                           // Initial filter 
+      location.hash = '#/'.concat(init);       // Display initial filter type in URL
       render();
-      }
     }
 
     function bindEvents() {
@@ -106,6 +112,7 @@
           deleteMultipleTodos(e);
         }
       });
+      window.addEventListener('hashchange', router);
     }
 
     /* Event handler functions */
@@ -268,7 +275,7 @@
     
     function toggle(e) {
       // TODO: Currently at <INPUT .. TYPE=`checkbox`>
-      // It should return convert the element clicked into an index value
+      // It should convert the element clicked to an index value 
       // It should toggle .completed property of the todo object
       // It should render new changes.
         var i = indexFromElement(e);
@@ -290,9 +297,6 @@
 
     function destroy(e) {
       // TODO:
-      // It should convert the element clicked into an index
-      // It should remove the element clicked from the todos array
-      // It should render screen
         todos.splice(indexFromElement(e), 1);
         render();
     }
@@ -303,7 +307,7 @@
       var todo_list = document.getElementById('todo-list');
       var $main = document.getElementById('main');
       var toggle_all = document.getElementById('toggle-all');      
-      var template = displayTodoToScreen(todos);
+      var template = buildTodoList(todos);
       
       todo_list.innerHTML = template;
       show($main, todos);
@@ -317,7 +321,7 @@
     function renderFooter() {
       var count = getActiveTodos();
       var footer = document.getElementById('footer');
-      var template = displayFooter({activeTodoCount:count.length,
+      var template = buildFooter({activeTodoCount:count.length,
                                      activeTodoWord:pluralize(count.length, 'item'),
                                      filter:filter,
                                      completedTodos:getCompletedTodos().length
@@ -334,7 +338,8 @@
         }     
     }  
 
-    function displayTodoToScreen(todos) {
+    // Replacement function for original todoTemplate 
+    function buildTodoList(todos) {
         var todosUl = document.querySelector('#todo-list');
         todosUl.innerHTML = "";
         for (var i = 0; i < todos.length; i++) {
@@ -354,7 +359,7 @@
           todoDivView.setAttribute('class', "view");
           todoInputToggle.setAttribute('class', "toggle");
           todoInputToggle.setAttribute('type', "checkbox");
-          todoLabel.textContent = todos[i].title;
+          todoLabel.textContent = title;
           todoButton.setAttribute('class', "destroy");
           todoInputEdit.setAttribute('class', 'edit');
           todoInputEdit.setAttribute('value',title );
@@ -366,42 +371,47 @@
           todosUl.appendChild(todoLi);    
       }
       return todosUl.innerHTML;
-}
+  }
 
-function displayFooter(todos) {
-  var footer = document.getElementById('footer');
-  footer.innerHTML = ""
-  var span = document.createElement('span');
-  var ul = document.createElement('ul');
-  var strong = document.createElement('strong');
-  var liAll = document.createElement('li');
-  var liActive = document.createElement('li');
-  var liCompleted = document.createElement('li');
-  var aAll = document.createElement('a');
-  var aActive = document.createElement('a');
-  var aCompleted = document.createElement('a');
-  var completedButton = document.createElement('button');
-  
-  ul.setAttribute("id", "filters");
-  span.setAttribute("id", "todo-count");
-  span.innerHTML = '<strong>'+ todos.activeTodoCount+'</strong>'+  '&nbsp;'+todos.activeTodoWord + " left";
-  liAll.innerHTML = (filter === 'all') ? '<a class="selected" href="#/all">'+'All'+'</a>'+'&nbsp;':
-                                           '<a href="#/all">'+'All'+'</a>'+'&nbsp;'
-  liActive.innerHTML = (filter === 'active') ? '<a class="selected" href="#/active">'+'Active'+'</a>'+'&nbsp;':
-                                            '<a href="#/active">'+'Active'+'</a>'+'&nbsp;'
-  liCompleted.innerHTML = (filter === 'completed') ? '<a class="selected" href="#/completed">'+'Completed'+'</a>'+'&nbsp;' : 
-                                            '<a href="#/completed">'+'Completed'+'</a>'+'&nbsp;' 
-  ul.appendChild(liAll);
-  ul.appendChild(liActive);
-  ul.appendChild(liCompleted);
-  footer.appendChild(span);
-  footer.appendChild(ul);
-  if (todos.completedTodos){
-    completedButton.setAttribute("id", "clear-completed");
-    completedButton.textContent = "Clear completed";
-    footer.appendChild(completedButton);
-  }  
-  return footer.innerHTML;
-}
+  // Replacement function for original footerTemplate
+  function buildFooter(todos) {
+    var footer = document.getElementById('footer');
+    footer.innerHTML = ""
+    var span = document.createElement('span');
+    var ul = document.createElement('ul');
+    var strong = document.createElement('strong');
+    var liAll = document.createElement('li');
+    var liActive = document.createElement('li');
+    var liCompleted = document.createElement('li');
 
-init();
+    var aAll = document.createElement('a');
+    var aActive = document.createElement('a');
+    var aCompleted = document.createElement('a');
+    var completedButton = document.createElement('button');
+
+    ul.setAttribute("id", "filters");
+    span.setAttribute("id", "todo-count");
+    span.innerHTML = '<strong>'+ todos.activeTodoCount+'</strong>'+  '&nbsp;'+todos.activeTodoWord + " left";
+    liAll.innerHTML = (todos.filter === 'all') ? '<a class="selected" href="#/all">'
+                                            +'All'+'</a>'+'&nbsp;':
+                                             '<a href="#/all">'+'All'+'</a>'+'&nbsp;'
+    liActive.innerHTML = (todos.filter === 'active') ? '<a class="selected" href="#/active">'+
+                                                'Active'+'</a>'+'&nbsp;':
+                                              '<a href="#/active">'+'Active'+'</a>'+'&nbsp;'
+    liCompleted.innerHTML = (todos.filter === 'completed') ? '<a class="selected" href="#/completed">'+
+                                              'Completed'+'</a>'+'&nbsp;' : 
+                                              '<a href="#/completed">'+'Completed'+'</a>'+'&nbsp;' 
+    ul.appendChild(liAll);
+    ul.appendChild(liActive);
+    ul.appendChild(liCompleted);
+    footer.appendChild(span);
+    footer.appendChild(ul);
+    if (todos.completedTodos){
+      completedButton.setAttribute("id", "clear-completed");
+      completedButton.textContent = "Clear completed";
+      footer.appendChild(completedButton);
+    }  
+    return footer.innerHTML;
+  }
+
+  init();
